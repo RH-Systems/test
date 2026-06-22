@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-<title>Calcly — Premium Calculator</title>
+<title>Calcly — Premium Calculator by Raj Hridoy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -260,6 +260,12 @@
     margin-top:12px; line-height:1.5; padding:0 6px;
   }
 
+  .credit{
+    font-size:10.5px; color:var(--text-muted); text-align:center;
+    margin-top:8px; font-family:var(--font-body); font-weight:500;
+  }
+  .credit span{ color:var(--gold); font-weight:700; }
+
   /* ---------- Payment sheet ---------- */
   .overlay{
     position:fixed; inset:0; z-index:50;
@@ -448,6 +454,7 @@
   </div>
 
   <div class="legal">Calcly is not a registered financial institution. Results are estimates. Math fees are strictly non‑refundable.</div>
+  <div class="credit">Built by <span>Raj Hridoy</span></div>
 </div>
 
 <div class="overlay" id="overlay">
