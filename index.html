@@ -1,232 +1,825 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Tamirul Millat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .bg-gradient-custom {
-            background: linear-gradient(135deg, #026670 0%, #D4F3C8 100%);
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Calcly — Premium Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-base:#060a12;
+    --bg-base-2:#0a1020;
+    --surface:#10172c;
+    --surface-2:#161f3d;
+    --surface-3:#1d2849;
+    --border:rgba(255,255,255,0.08);
+    --text:#edf1f8;
+    --text-muted:#8592ad;
+    --text-faint:#566083;
+    --mint:#2de2a8;
+    --mint-dim:#1ea884;
+    --gold:#f5c453;
+    --gold-dim:#caa23f;
+    --danger:#ff6b6b;
+    --radius-lg:28px;
+    --radius-md:18px;
+    --radius-sm:12px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
 
-        .shadow-custom {
-            box-shadow: 0 25px 50px -12px rgba(2, 102, 112, 0.35); /* using #026670 shade */
-        }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
 
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
+  body{
+    min-height:100dvh;
+    background:var(--bg-base);
+    font-family:var(--font-body);
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px calc(24px + env(safe-area-inset-bottom));
+    position:relative;
+    overflow-x:hidden;
+  }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+  .bg-glow{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background:
+      radial-gradient(600px circle at 15% 10%, rgba(45,226,168,0.14), transparent 60%),
+      radial-gradient(600px circle at 85% 90%, rgba(245,196,83,0.10), transparent 60%);
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .bg-glow{ animation: drift 18s ease-in-out infinite alternate; }
+  }
+  @keyframes drift{
+    from{ transform: translate(0,0); }
+    to{ transform: translate(-10px, 10px); }
+  }
+
+  .app{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:400px;
+    background:linear-gradient(165deg, var(--surface), var(--bg-base-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    box-shadow: 0 30px 60px -25px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    padding:18px 18px 20px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .brand{ display:flex; align-items:center; gap:8px; }
+  .brand-dot{
+    width:26px; height:26px; border-radius:50%;
+    background:linear-gradient(135deg, var(--mint), var(--gold));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; font-size:13px; color:#0a0e18;
+    flex-shrink:0;
+  }
+  .brand-name{ font-family:var(--font-display); font-weight:700; font-size:17px; letter-spacing:-0.02em; }
+  .verified{
+    width:14px; height:14px; border-radius:50%; background:var(--mint);
+    color:#06210f; font-size:9px; font-weight:700;
+    display:inline-flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .pro-badge{
+    font-family:var(--font-body); font-size:10px; font-weight:700; letter-spacing:0.04em;
+    color:var(--gold); background:rgba(245,196,83,0.12);
+    border:1px solid rgba(245,196,83,0.35);
+    padding:2px 7px; border-radius:999px; flex-shrink:0;
+  }
+
+  .spent-pill{
+    font-family:var(--font-mono); font-size:12px; color:var(--text-muted);
+    background:var(--surface-2); border:1px solid var(--border);
+    padding:6px 10px; border-radius:999px; display:flex; align-items:center; gap:6px;
+    cursor:pointer; flex-shrink:0; transition:transform .15s ease, background .2s ease;
+  }
+  .spent-pill:active{ transform:scale(0.96); }
+  .spent-pill.pulse{ animation:pulse-pill .5s ease; }
+  @keyframes pulse-pill{
+    0%{ background:var(--surface-2); }
+    35%{ background:rgba(245,196,83,0.22); color:var(--gold); }
+    100%{ background:var(--surface-2); }
+  }
+  #spentAmount{ color:var(--text); font-weight:600; }
+
+  .tagline{
+    font-size:11.5px; color:var(--text-faint); margin:8px 2px 0; line-height:1.4;
+  }
+
+  /* ---------- History panel ---------- */
+  .history-panel{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .35s cubic-bezier(.4,0,.2,1);
+  }
+  .history-panel.open{ max-height:160px; }
+  .history-inner{ padding:12px 2px 4px; border-bottom:1px dashed var(--border); margin-bottom:4px; max-height:150px; overflow-y:auto; }
+  .history-empty{ font-size:12px; color:var(--text-faint); padding:6px 2px 10px; }
+  .history-row{
+    display:flex; justify-content:space-between; align-items:baseline;
+    padding:5px 2px; font-size:12.5px;
+  }
+  .history-expr{ font-family:var(--font-mono); color:var(--text-muted); }
+  .history-fee{ font-family:var(--font-mono); color:var(--mint); font-weight:600; }
+  .history-fee.free{ color:var(--gold); }
+
+  /* ---------- Display ---------- */
+  .display{
+    margin-top:16px;
+    background:var(--bg-base-2);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:18px 16px 14px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    justify-content:flex-end;
+    min-height:108px;
+  }
+  .display-secondary{
+    font-family:var(--font-mono); font-size:14px; color:var(--text-muted);
+    min-height:18px; text-align:right; width:100%;
+  }
+  .display-main{
+    font-family:var(--font-mono); font-weight:500; letter-spacing:-0.5px;
+    font-size:clamp(2.1rem, 10vw, 3rem);
+    color:var(--text); text-align:right; width:100%;
+    white-space:nowrap; overflow:hidden;
+  }
+  .display-main.shrink-1{ font-size:clamp(1.6rem, 8vw, 2.2rem); }
+  .display-main.shrink-2{ font-size:clamp(1.2rem, 6vw, 1.7rem); }
+  .display-main.error{ color:var(--danger); }
+
+  .trial-note{
+    font-size:11.5px; color:var(--gold); text-align:center; margin:10px 0 2px;
+    font-weight:600;
+  }
+  .trial-note.used{ color:var(--text-faint); font-weight:500; }
+
+  /* ---------- Keypad ---------- */
+  .keypad{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:10px;
+  }
+  .key{
+    border:none;
+    border-radius:var(--radius-md);
+    min-height:60px;
+    font-size:1.3rem;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    transition:transform .08s ease, background .15s ease, filter .15s ease;
+    position:relative;
+  }
+  .key:active{ transform:scale(0.94); }
+
+  .key-digit{
+    background:var(--surface-2);
+    color:var(--text);
+    font-family:var(--font-display);
+    font-weight:500;
+    border:1px solid var(--border);
+  }
+  .key-digit:active{ background:var(--surface-3); }
+  .key-zero{ grid-column:span 2; }
+
+  .key-fn{
+    background:var(--surface-3);
+    color:var(--text-muted);
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:0.95rem;
+  }
+  .key-fn:active{ filter:brightness(1.2); }
+
+  .key-op{
+    background:transparent;
+    border:1px solid rgba(45,226,168,0.35);
+    color:var(--mint);
+    font-weight:600;
+  }
+  .key-op:active{ background:rgba(45,226,168,0.15); }
+  .key-op.active-op{ background:rgba(45,226,168,0.18); }
+
+  .key-equals{
+    background:linear-gradient(135deg, var(--gold), var(--gold-dim));
+    color:#1a1404;
+    font-weight:700;
+    font-size:1.4rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .equals-badge{
+    position:absolute; top:6px; right:8px;
+    width:15px; height:15px; border-radius:50%;
+    background:var(--mint); color:#06210f;
+    font-size:9px; font-weight:700; font-family:var(--font-body);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- Upsell + legal ---------- */
+  .upsell{
+    margin-top:16px;
+    background:rgba(245,196,83,0.07);
+    border:1px dashed rgba(245,196,83,0.3);
+    border-radius:var(--radius-sm);
+    padding:11px 12px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .upsell-text{ font-size:11.5px; color:var(--text-muted); line-height:1.35; }
+  .upsell-text strong{ color:var(--gold); }
+  .upsell-btn{
+    background:none; border:1px solid rgba(45,226,168,0.4); color:var(--mint);
+    font-family:var(--font-body); font-weight:700; font-size:11.5px;
+    padding:7px 10px; border-radius:999px; cursor:pointer; flex-shrink:0;
+    white-space:nowrap;
+  }
+  .upsell-btn:active{ background:rgba(45,226,168,0.15); }
+
+  .legal{
+    font-size:9.5px; color:var(--text-faint); text-align:center;
+    margin-top:12px; line-height:1.5; padding:0 6px;
+  }
+
+  /* ---------- Payment sheet ---------- */
+  .overlay{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(4,6,12,0.6);
+    backdrop-filter:blur(4px);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+    padding:0;
+  }
+  .overlay.open{ opacity:1; pointer-events:auto; }
+
+  .sheet{
+    width:100%; max-width:400px;
+    background:linear-gradient(165deg, var(--surface), var(--bg-base-2));
+    border:1px solid var(--border);
+    border-radius:24px 24px 0 0;
+    padding:10px 20px calc(22px + env(safe-area-inset-bottom));
+    transform:translateY(100%);
+    transition:transform .35s cubic-bezier(.32,.72,0,1);
+    box-shadow:0 -20px 50px -20px rgba(0,0,0,0.6);
+  }
+  .overlay.open .sheet{ transform:translateY(0); }
+
+  @media (min-width:520px){
+    .overlay{ align-items:center; }
+    .sheet{ border-radius:24px; transform:translateY(20px) scale(0.97); opacity:0; transition:transform .25s ease, opacity .25s ease; }
+    .overlay.open .sheet{ transform:translateY(0) scale(1); opacity:1; }
+  }
+
+  .sheet-handle{
+    width:36px; height:4px; border-radius:999px; background:var(--border);
+    margin:6px auto 14px;
+  }
+  .sheet-header h2{
+    font-family:var(--font-display); font-size:19px; margin:0 0 2px; font-weight:700;
+  }
+  .sheet-header p{
+    font-family:var(--font-mono); font-size:12.5px; color:var(--text-muted); margin:0 0 14px;
+  }
+
+  .receipt{ border-top:1px solid var(--border); padding-top:10px; }
+  .receipt-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13.5px; padding:6px 0; color:var(--text-muted);
+  }
+  .receipt-row .amt{ font-family:var(--font-mono); }
+  .receipt-row.strike .amt, .receipt-row.strike .lbl{ text-decoration:line-through; opacity:0.45; }
+  .receipt-total{
+    display:flex; justify-content:space-between; align-items:center;
+    border-top:1px solid var(--border); margin-top:6px; padding-top:10px;
+    font-family:var(--font-display); font-weight:700; font-size:17px;
+  }
+  .receipt-total .amt{ font-family:var(--font-mono); color:var(--gold); }
+  .receipt-total .amt.free{ color:var(--mint); }
+  .free-tag{
+    font-size:10px; font-weight:700; color:var(--mint); background:rgba(45,226,168,0.14);
+    border:1px solid rgba(45,226,168,0.4); padding:2px 7px; border-radius:999px; margin-left:8px;
+  }
+
+  .payment-method{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:16px; padding:11px 12px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:14px;
+    font-size:13px; color:var(--text-muted); font-family:var(--font-mono);
+  }
+  .payment-method button{
+    background:none; border:none; color:var(--mint); font-family:var(--font-body);
+    font-weight:600; font-size:12.5px; cursor:pointer; padding:0;
+  }
+
+  .pay-btn{
+    width:100%; margin-top:16px; border:none; border-radius:16px;
+    padding:16px; font-family:var(--font-body); font-weight:700; font-size:15px;
+    background:linear-gradient(135deg, var(--gold), var(--gold-dim));
+    color:#1a1404; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:transform .1s ease, filter .15s ease;
+    min-height:54px;
+  }
+  .pay-btn:active{ transform:scale(0.98); }
+  .pay-btn.success{ background:linear-gradient(135deg, var(--mint), var(--mint-dim)); color:#06210f; }
+  .pay-btn[disabled]{ filter:saturate(0.6); cursor:default; }
+
+  .spinner{
+    width:18px; height:18px; border-radius:50%;
+    border:2.5px solid rgba(26,20,4,0.25); border-top-color:#1a1404;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .check-icon{ width:18px; height:18px; }
+  .check-icon circle{
+    stroke:#06210f; stroke-width:3; fill:none;
+    stroke-dasharray:75; stroke-dashoffset:75;
+    animation:draw .4s ease forwards;
+  }
+  .check-icon path{
+    stroke:#06210f; stroke-width:3.5; fill:none; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:20; stroke-dashoffset:20;
+    animation:draw .3s ease forwards .35s;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+
+  .maybe-later{
+    width:100%; background:none; border:none; margin-top:12px;
+    font-family:var(--font-body); font-size:13px; color:var(--text-faint);
+    text-decoration:underline; cursor:pointer; padding:4px;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom));
+    transform:translate(-50%, 16px); 
+    background:var(--surface-3); color:var(--text);
+    font-size:13px; font-family:var(--font-body); font-weight:500;
+    padding:11px 18px; border-radius:999px; border:1px solid var(--border);
+    box-shadow:0 12px 30px -10px rgba(0,0,0,0.5);
+    opacity:0; pointer-events:none; z-index:60;
+    transition:opacity .25s ease, transform .25s ease;
+    max-width:90vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
+</style>
 </head>
-<body class="min-h-screen bg-gradient-custom flex  items-center justify-center p-4">
-<!-- Main Container -->
-<div class="w-full max-w-6xl mx-auto animate-fade-in">
-    <div class="bg-white rounded-3xl shadow-custom overflow-hidden">
-        <div class="flex flex-col lg:flex-row flex-col-reverse">
-            <!-- Left Side - Images and Branding -->
-            <div class="lg:w-1/2 bg-gradient-to-br from-[#026670] to-[#D4F3C8] flex">
-    <!-- School Building Image -->
-    <div class="w-full h-full">
-        <div class="overflow-hidden shadow-lg h-full">
-            <img src="https://www.tmt.edu.bd/images/tm/madrasah.jpg" 
-                 alt="School Building" 
-                 class="w-full h-full object-cover">
-        </div>
+<body>
+
+<div class="bg-glow"></div>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-dot">$</span>
+      <span class="brand-name">Calcly</span>
+      <span class="verified">✓</span>
+      <span class="pro-badge">PRO</span>
     </div>
+    <button class="spent-pill" id="spentPill" type="button">
+      <span>🧾</span><span id="spentAmount">$0.00</span>&nbsp;today
+    </button>
+  </div>
+  <div class="tagline">Real-time arithmetic infrastructure, billed per operation.</div>
+
+  <div class="history-panel" id="historyPanel">
+    <div class="history-inner">
+      <div class="history-empty" id="historyEmpty">No charges yet — calculate something.</div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+
+  <div class="display">
+    <div class="display-secondary" id="displaySecondary">&nbsp;</div>
+    <div class="display-main" id="displayMain">0</div>
+  </div>
+  <div class="trial-note" id="trialNote">🎁 First calculation today is free</div>
+
+  <div class="keypad">
+    <button class="key key-fn" data-action="clear">AC</button>
+    <button class="key key-fn" data-action="sign">±</button>
+    <button class="key key-fn" data-action="percent">%</button>
+    <button class="key key-op" data-op="÷">÷</button>
+
+    <button class="key key-digit" data-digit="7">7</button>
+    <button class="key key-digit" data-digit="8">8</button>
+    <button class="key key-digit" data-digit="9">9</button>
+    <button class="key key-op" data-op="×">×</button>
+
+    <button class="key key-digit" data-digit="4">4</button>
+    <button class="key key-digit" data-digit="5">5</button>
+    <button class="key key-digit" data-digit="6">6</button>
+    <button class="key key-op" data-op="−">−</button>
+
+    <button class="key key-digit" data-digit="1">1</button>
+    <button class="key key-digit" data-digit="2">2</button>
+    <button class="key key-digit" data-digit="3">3</button>
+    <button class="key key-op" data-op="+">+</button>
+
+    <button class="key key-digit key-zero" data-digit="0">0</button>
+    <button class="key key-digit" data-action="decimal">.</button>
+    <button class="key key-equals" data-action="equals">=<span class="equals-badge">$</span></button>
+  </div>
+
+  <div class="upsell">
+    <div class="upsell-text">Tired of fees? <strong>Calcly Unlimited</strong> — unlimited calculations</div>
+    <button class="upsell-btn" id="upsellBtn" type="button">Upgrade →</button>
+  </div>
+
+  <div class="legal">Calcly is not a registered financial institution. Results are estimates. Math fees are strictly non‑refundable.</div>
 </div>
 
-
-            <!-- Right Side - Login Form -->
-            <div class="lg:w-1/2 p-8 lg:p-12 flex items-center justify-center">
-                <div class="w-full max-w-md">
-                    
-                    <div class="mb-2 text-center">
-                    <div class="w-24 h-24 mx-auto mb-4 bg-white rounded-full p-4 shadow-lg">
-                        <img src="https://www.tmt.edu.bd/images/tm/tmkm-logo.jpg" alt="School Logo" class="w-full h-full object-contain">
-                    </div>
-                    <div class="mt-4 mb-8 text-center">
-                        <h1 class="text-xl md:text-2xl font-bold text-[#026670] mb-2">
-                        Tamirul Millat Kamil Madrasah</h1>
-                        <p class="text-gray-600">Tongi, Gazipur-1712</p>
-                    </div>
-                        </div>
-                
-                    
-
-                    <!-- Login Form -->
-                    <form id="loginForm" action="https://www.eximusedu.com/login" class="space-y-6" method="POST">
-                        <!-- Email Field -->
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                                User ID
-                            </label>
-                            <div class="relative">
-                                <input
-                                    type="text"
-                                    id="email"
-                                    name="email"
-                                    required
-                                    class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#026670] focus:border-transparent transition duration-200 outline-none"
-                                    placeholder="Enter your ID"
-                                    value="tmkmt-"
-                                >
-                                <svg class="absolute left-3 top-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                                </svg>
-                            </div>
-                        </div>
-
-                        <!-- Password Field -->
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                                Password
-                            </label>
-                            <div class="relative">
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    required
-                                    class="w-full px-4 py-3 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#026670] focus:border-transparent transition duration-200 outline-none"
-                                    placeholder="Enter your password"
-                                >
-                                <svg class="absolute left-3 top-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                <button type="button" id="togglePassword" class="absolute right-3 top-3 h-5 w-5 text-gray-400 hover:text-gray-600">
-                                    <svg id="eyeIcon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Remember Me & Forgot Password -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <input
-                                    id="remember"
-                                    type="checkbox"
-                                    class="h-4 w-4 text-[#026670] focus:ring-[#026670] border-gray-300 rounded"
-                                >
-                                <label for="remember" class="ml-2 block text-sm text-gray-700">
-                                    Remember me
-                                </label>
-                            </div>
-                            <a href="https://www.eximusedu.com/password/reset?institute=tmkmt" class="text-sm text-[#026670] hover:text-[#014d52] transition duration-200">
-                                Forgot password?
-                            </a>
-                        </div>
-
-                        <!-- Login Button -->
-                        <button
-                            type="submit"
-                            class="w-full bg-gradient-to-r from-[#026670] to-[#D4F3C8] text-white py-3 px-4 rounded-lg hover:from-[#014d52] hover:to-[#bdebb0] focus:ring-4 focus:ring-[#D4F3C8]/50 transition duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                            id="loginBtn"
-                        >
-                            <span id="loginText">Sign In</span>
-                            <svg id="loadingSpinner" class="hidden animate-spin -mr-1 ml-3 h-5 w-5 text-white inline" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        </button>
-
-
-                        <!-- Error Message -->
-                        
-                        <!-- Success Message -->
-                        <div id="successMessage" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span id="successText">Login successful! Redirecting...</span>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+<div class="overlay" id="overlay">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2>Confirm &amp; Pay</h2>
+      <p id="sheetSubtitle">For: —</p>
     </div>
+    <div class="receipt" id="receiptRows"></div>
+    <div class="receipt-total" id="receiptTotalRow">
+      <span>Total</span>
+      <span class="amt" id="receiptTotalAmt">$0.00</span>
+    </div>
+    <div class="payment-method">
+      <span>💳 •••• 4242 (demo)</span>
+      <button id="changeCardBtn" type="button">Change</button>
+    </div>
+    <button class="pay-btn" id="payBtn" type="button">
+      <span id="payBtnContent">Pay $0.00 &amp; Reveal</span>
+    </button>
+    <button class="maybe-later" id="maybeLaterBtn" type="button">Maybe later</button>
+  </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-    
-    
-    // Function to read query params
-    function getQueryParam(param) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(param);
+(function(){
+  // ---------- State ----------
+  let display = '0';
+  let previousOperand = null;
+  let operator = null;
+  let waitingForSecond = false;
+  let usedFreeTrial = false;
+  let totalSpentToday = 0;
+  let history = [];
+  let pending = null; // {result, expr, op, breakdown}
+  let sheetBusy = false;
+
+  const FEES = {
+    '+': { label: 'Addition fee', amount: 0.25 },
+    '−': { label: 'Subtraction fee', amount: 0.25 },
+    '×': { label: 'Multiplication fee', amount: 0.75 },
+    '÷': { label: 'Division fee', amount: 1.00 },
+  };
+  const NO_OP_FEE = { label: 'Number lookup fee', amount: 0.15 };
+  const PLATFORM_FEE = 0.10;
+  const TAX_RATE = 0.08;
+
+  // ---------- DOM ----------
+  const displayMain = document.getElementById('displayMain');
+  const displaySecondary = document.getElementById('displaySecondary');
+  const trialNote = document.getElementById('trialNote');
+  const spentPill = document.getElementById('spentPill');
+  const spentAmount = document.getElementById('spentAmount');
+  const historyPanel = document.getElementById('historyPanel');
+  const historyList = document.getElementById('historyList');
+  const historyEmpty = document.getElementById('historyEmpty');
+  const overlay = document.getElementById('overlay');
+  const sheetSubtitle = document.getElementById('sheetSubtitle');
+  const receiptRows = document.getElementById('receiptRows');
+  const receiptTotalRow = document.getElementById('receiptTotalRow');
+  const receiptTotalAmt = document.getElementById('receiptTotalAmt');
+  const payBtn = document.getElementById('payBtn');
+  const payBtnContent = document.getElementById('payBtnContent');
+  const maybeLaterBtn = document.getElementById('maybeLaterBtn');
+  const changeCardBtn = document.getElementById('changeCardBtn');
+  const upsellBtn = document.getElementById('upsellBtn');
+  const toastEl = document.getElementById('toast');
+
+  // ---------- Helpers ----------
+  function fmtMoney(n){ return '$' + n.toFixed(2); }
+
+  function fmtNumber(n){
+    if (n === null || n === undefined || isNaN(n)) return 'Error';
+    if (!isFinite(n)) return 'Error';
+    const fixed = Math.round(n * 1e8) / 1e8;
+    let str = fixed.toString();
+    if (str.length > 14) str = fixed.toPrecision(10);
+    if (str.includes('.')) {
+      const [intPart, decPart] = str.split('.');
+      str = Number(intPart).toLocaleString('en-US') + '.' + decPart.slice(0, 8);
+    } else {
+      str = Number(str).toLocaleString('en-US');
+    }
+    return str;
+  }
+
+  function updateDisplay(){
+    displayMain.textContent = display;
+    displayMain.classList.remove('shrink-1','shrink-2','error');
+    if (display === 'Error') displayMain.classList.add('error');
+    const len = display.replace(/,/g,'').length;
+    if (len > 12) displayMain.classList.add('shrink-2');
+    else if (len > 9) displayMain.classList.add('shrink-1');
+
+    if (operator && previousOperand !== null) {
+      displaySecondary.textContent = fmtNumber(previousOperand) + ' ' + operator;
+    } else {
+      displaySecondary.innerHTML = '&nbsp;';
+    }
+  }
+
+  function showToast(msg, ms){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(() => toastEl.classList.remove('show'), ms || 2400);
+  }
+
+  function pulsePill(){
+    spentPill.classList.remove('pulse');
+    requestAnimationFrame(() => spentPill.classList.add('pulse'));
+  }
+
+  function renderHistory(){
+    if (history.length === 0){
+      historyEmpty.style.display = 'block';
+      historyList.innerHTML = '';
+      return;
+    }
+    historyEmpty.style.display = 'none';
+    historyList.innerHTML = history.slice(0, 6).map(h => {
+      const feeClass = h.fee === 0 ? 'history-fee free' : 'history-fee';
+      const feeText = h.fee === 0 ? 'FREE' : fmtMoney(h.fee);
+      return '<div class="history-row"><span class="history-expr">' + h.expr + '</span><span class="' + feeClass + '">' + feeText + '</span></div>';
+    }).join('');
+  }
+
+  // ---------- Calculator core ----------
+  function inputDigit(d){
+    if (waitingForSecond){
+      display = d;
+      waitingForSecond = false;
+    } else {
+      display = (display === '0') ? d : display + d;
+    }
+    updateDisplay();
+  }
+
+  function inputDecimal(){
+    if (waitingForSecond){
+      display = '0.';
+      waitingForSecond = false;
+      updateDisplay();
+      return;
+    }
+    if (!display.includes('.')) display += '.';
+    updateDisplay();
+  }
+
+  function clearAll(){
+    display = '0';
+    previousOperand = null;
+    operator = null;
+    waitingForSecond = false;
+    updateDisplay();
+  }
+
+  function toggleSign(){
+    if (display === '0') return;
+    display = display.startsWith('-') ? display.slice(1) : '-' + display;
+    updateDisplay();
+  }
+
+  function applyPercent(){
+    const val = parseFloat(display);
+    if (isNaN(val)) return;
+    display = fmtNumber(val / 100).replace(/,/g,'');
+    updateDisplay();
+  }
+
+  function chooseOperator(op){
+    const inputVal = parseFloat(display.replace(/,/g,''));
+    if (operator && waitingForSecond){
+      operator = op;
+      return;
+    }
+    if (previousOperand === null){
+      previousOperand = inputVal;
+    } else if (operator) {
+      const result = operate(previousOperand, operator, inputVal);
+      previousOperand = result.error ? null : result.value;
+      display = result.error ? 'Error' : fmtNumber(result.value).replace(/,/g,'');
+    }
+    operator = op;
+    waitingForSecond = true;
+    updateDisplay();
+  }
+
+  function operate(a, op, b){
+    switch(op){
+      case '+': return { value: a + b };
+      case '−': return { value: a - b };
+      case '×': return { value: a * b };
+      case '÷':
+        if (b === 0) return { error: true };
+        return { value: a / b };
+      default: return { value: b };
+    }
+  }
+
+  function buildBreakdown(op){
+    const feeInfo = (op && FEES[op]) ? FEES[op] : NO_OP_FEE;
+    const opFee = feeInfo.amount;
+    const subtotal = opFee + PLATFORM_FEE;
+    const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+    const total = Math.round((subtotal + tax) * 100) / 100;
+    return {
+      rows: [
+        { label: feeInfo.label, amount: opFee },
+        { label: 'Platform fee', amount: PLATFORM_FEE },
+        { label: 'Arithmetic tax (8%)', amount: tax },
+      ],
+      total: total,
+    };
+  }
+
+  function pressEquals(){
+    if (sheetBusy) return;
+    const inputVal = parseFloat(display.replace(/,/g,''));
+    let resultVal, exprStr, opUsed;
+
+    if (operator !== null && previousOperand !== null){
+      const r = operate(previousOperand, operator, inputVal);
+      opUsed = operator;
+      exprStr = fmtNumber(previousOperand) + ' ' + operator + ' ' + fmtNumber(inputVal);
+      if (r.error){
+        display = 'Error';
+        previousOperand = null; operator = null; waitingForSecond = false;
+        updateDisplay();
+        showToast("Can't divide by zero — that one's on the house.", 2600);
+        return;
+      }
+      resultVal = r.value;
+    } else {
+      resultVal = inputVal;
+      exprStr = fmtNumber(inputVal);
+      opUsed = null;
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const error = getQueryParam("error");
-        if (error === "invalid") {
-            const errorMessage = document.getElementById("errorMessage");
-            if (errorMessage) {
-                errorMessage.classList.remove("hidden");
-            }
+    const breakdown = buildBreakdown(opUsed);
+    pending = { result: resultVal, expr: exprStr, breakdown: breakdown };
+    openSheet();
+  }
+
+  // ---------- Payment sheet ----------
+  function openSheet(){
+    sheetSubtitle.textContent = 'For: ' + pending.expr;
+    const isFree = !usedFreeTrial;
+
+    receiptRows.innerHTML = pending.breakdown.rows.map(r => {
+      const rowClass = isFree ? 'receipt-row strike' : 'receipt-row';
+      return '<div class="' + rowClass + '"><span class="lbl">' + r.label + '</span><span class="amt">' + fmtMoney(r.amount) + '</span></div>';
+    }).join('');
+
+    if (isFree){
+      receiptTotalRow.innerHTML = '<span>Total <span class="free-tag">FREE TRIAL</span></span><span class="amt free">$0.00</span>';
+      payBtnContent.textContent = 'Reveal for free 🎁';
+    } else {
+      receiptTotalRow.innerHTML = '<span>Total</span><span class="amt" id="receiptTotalAmt">' + fmtMoney(pending.breakdown.total) + '</span>';
+      payBtnContent.textContent = 'Pay ' + fmtMoney(pending.breakdown.total) + ' & Reveal';
+    }
+
+    payBtn.classList.remove('success');
+    payBtn.disabled = false;
+    overlay.classList.add('open');
+  }
+
+  function closeSheet(){
+    overlay.classList.remove('open');
+  }
+
+  function revealResult(){
+    display = fmtNumber(pending.result).replace(/,/g,'');
+    previousOperand = null;
+    operator = null;
+    waitingForSecond = false;
+    updateDisplay();
+  }
+
+  function payNow(){
+    if (sheetBusy || !pending) return;
+    sheetBusy = true;
+    const isFree = !usedFreeTrial;
+    const fee = isFree ? 0 : pending.breakdown.total;
+
+    payBtn.disabled = true;
+    payBtnContent.innerHTML = '<span class="spinner"></span><span>Processing payment…</span>';
+
+    setTimeout(() => {
+      payBtn.classList.add('success');
+      payBtnContent.innerHTML =
+        '<svg class="check-icon" viewBox="0 0 52 52"><circle cx="26" cy="26" r="23"/><path d="M14.5 27.2l7 7.1 16.5-16.6"/></svg>' +
+        '<span>Payment successful</span>';
+
+      setTimeout(() => {
+        history.unshift({ expr: pending.expr, fee: fee, time: new Date() });
+        renderHistory();
+        if (!isFree){
+          totalSpentToday += fee;
+          spentAmount.textContent = fmtMoney(totalSpentToday);
+          pulsePill();
         }
-        else if (error === "terminated") {
-            const errorMessage = document.getElementById("errorMessage");
-            if (errorMessage) {
-                errorMessage.classList.remove("hidden");
-            }
-        }
+        usedFreeTrial = true;
+        trialNote.textContent = '💳 Card ending 4242 ready';
+        trialNote.classList.add('used');
+
+        revealResult();
+        closeSheet();
+        sheetBusy = false;
+        pending = null;
+
+        showToast(isFree ? '✓ Free trial used · result unlocked' : '✓ Paid ' + fmtMoney(fee) + ' · result unlocked');
+      }, 750);
+    }, 1100);
+  }
+
+  function maybeLater(){
+    if (sheetBusy) return;
+    closeSheet();
+    pending = null;
+    showToast('Result withheld 🔒 — pay whenever you\'re ready.');
+  }
+
+  // ---------- Event wiring ----------
+  document.querySelectorAll('.key-digit[data-digit]').forEach(btn => {
+    btn.addEventListener('click', () => inputDigit(btn.dataset.digit));
+  });
+  document.querySelector('[data-action="decimal"]').addEventListener('click', inputDecimal);
+  document.querySelector('[data-action="clear"]').addEventListener('click', clearAll);
+  document.querySelector('[data-action="sign"]').addEventListener('click', toggleSign);
+  document.querySelector('[data-action="percent"]').addEventListener('click', applyPercent);
+  document.querySelector('[data-action="equals"]').addEventListener('click', pressEquals);
+  document.querySelectorAll('.key-op[data-op]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.key-op').forEach(b => b.classList.remove('active-op'));
+      btn.classList.add('active-op');
+      chooseOperator(btn.dataset.op);
     });
-    
-    // Toggle password visibility
-    document.getElementById('togglePassword').addEventListener('click', function() {
-        const passwordInput = document.getElementById('password');
-        const eyeIcon = document.getElementById('eyeIcon');
+  });
 
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            eyeIcon.innerHTML = `
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464m1.414 1.414L8.464 8.464M9.878 9.878l4.242-4.242m0 0L12.536 7.22m1.584 -1.584l2.122 2.122" />
-                `;
-        } else {
-            passwordInput.type = 'password';
-            eyeIcon.innerHTML = `
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                `;
-        }
-    });
+  payBtn.addEventListener('click', payNow);
+  maybeLaterBtn.addEventListener('click', maybeLater);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) maybeLater(); });
+  changeCardBtn.addEventListener('click', () => showToast('Demo mode — no real cards accepted 💳'));
+  upsellBtn.addEventListener('click', () => showToast('Nice try — Calcly monetizes every keystroke. 😏'));
 
-    
-    document.getElementById('loginBtn').addEventListener('click', function() {
-            const loginBtn = document.getElementById('loginBtn');
-            const loginText = document.getElementById('loginText');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
-            loginText.textContent = 'Signing in...';
-            loadingSpinner.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-            successMessage.classList.add('hidden');
+  spentPill.addEventListener('click', () => historyPanel.classList.toggle('open'));
 
-    });
+  document.addEventListener('keydown', (e) => {
+    if (e.key >= '0' && e.key <= '9') inputDigit(e.key);
+    else if (e.key === '.') inputDecimal();
+    else if (e.key === '+') chooseOperator('+');
+    else if (e.key === '-') chooseOperator('−');
+    else if (e.key === '*') chooseOperator('×');
+    else if (e.key === '/') { e.preventDefault(); chooseOperator('÷'); }
+    else if (e.key === 'Enter' || e.key === '=') pressEquals();
+    else if (e.key === 'Backspace') {
+      display = display.length > 1 ? display.slice(0, -1) : '0';
+      updateDisplay();
+    }
+    else if (e.key === 'Escape') {
+      if (overlay.classList.contains('open')) maybeLater();
+      else clearAll();
+    }
+  });
 
-    const inputs = document.querySelectorAll('input[type="email"], input[type="password"]');
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.classList.add('ring-2', 'ring-blue-500');
-        });
-
-        input.addEventListener('blur', function() {
-            this.parentElement.classList.remove('ring-2', 'ring-blue-500');
-        });
-    });
-
+  updateDisplay();
+  renderHistory();
+})();
 </script>
 </body>
 </html>
-
